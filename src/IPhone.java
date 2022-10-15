@@ -1,5 +1,3 @@
-import java.util.Objects;
-
 abstract public class IPhone
 {
     protected String modelName;
@@ -8,11 +6,13 @@ abstract public class IPhone
 
     protected int price;
 
+    protected IPhoneType type;
     protected int id;
 
-    IPhone(String modelName, Storage modelCapacity, Color modelColor, int price)
+    IPhone(IPhoneType type, Storage modelCapacity, Color modelColor, int price)
     {
-        setModelName(modelName);
+        setType(type);
+        setModelName(type.toString());
         setModelCapacity(modelCapacity);
         setModelColor(modelColor);
         setPrice(price);
@@ -36,6 +36,8 @@ abstract public class IPhone
     {
         this.price = price;
     }
+
+    protected void setType(IPhoneType type) { this.type = type; }
 
     public int getPrice()
     {
@@ -62,23 +64,11 @@ abstract public class IPhone
         return modelColor;
     }
 
+    public IPhoneType getType() { return type; }
+
     @Override
     public String toString()
     {
-        return String.format("%s %sGB %s (%d$)", this.modelName, Storage.toString(this.modelCapacity), this.modelColor, this.price);
-    }
-
-    public boolean equivalent(IPhone other)
-    {
-        try{
-            return  (this.modelCapacity == other.modelCapacity)
-                    && (this.modelColor == other.modelColor)
-                    && (this.modelName.contentEquals(other.modelName));
-        }
-        catch(NullPointerException exception)
-        {
-            System.err.printf("Exception in Equivalent method: %s", exception.getMessage());
-            return false;
-        }
+        return String.format("%s %s %s (%d$)", this.modelName, this.modelCapacity, this.modelColor, this.price);
     }
 }

@@ -1,9 +1,11 @@
+import java.awt.*;
+import java.lang.reflect.Array;
 import java.util.*;
 
 public class IPhoneStock {
-    private static HashMap<Storage, HashMap<Color, Stack<IPhone12>>> iphone12Stock;
-    private static HashMap<Storage, HashMap<Color, Stack<IPhone13>>> iphone13Stock;
-    private static HashMap<Storage, HashMap<Color, Stack<IPhoneSE>>> iphoneSEStock;
+    private static HashMap<Storage, HashMap<Color, Stack<IPhone>>> iphone12Stock;
+    private static HashMap<Storage, HashMap<Color, Stack<IPhone>>> iphone13Stock;
+    private static HashMap<Storage, HashMap<Color, Stack<IPhone>>> iphoneSEStock;
 
     private static IPhoneStock instance;
 
@@ -57,17 +59,20 @@ public class IPhoneStock {
         }
     }
 
+    public void addToStock(IPhoneType type, Storage storage, Color color, int price)
+    {
+        switch(type)
+        {
+            case IPHONE_13 -> iphone13Stock.get(storage).get(color).add(new IPhone13(storage, color, price));
+            case IPHONE_12 -> iphone12Stock.get(storage).get(color).add(new IPhone12(storage, color, price));
+            case IPHONE_SE -> iphoneSEStock.get(storage).get(color).add(new IPhoneSE(storage, color, price));
+        }
+    }
+
     public void addToStock(IPhoneType type, Storage storage, Color color, int price, int count)
     {
         for (int i = 0; i < count; i++)
-        {
-            switch(type)
-            {
-                case IPHONE_13 -> iphone13Stock.get(storage).get(color).add(new IPhone13(storage, color, price));
-                case IPHONE_12 -> iphone12Stock.get(storage).get(color).add(new IPhone12(storage, color, price));
-                case IPHONE_SE -> iphoneSEStock.get(storage).get(color).add(new IPhoneSE(storage, color, price));
-            }
-        }
+            addToStock(type, storage, color, price);
     }
 
     public IPhone buyIPhone(IPhoneType type, Storage storage, Color color)
@@ -98,9 +103,12 @@ public class IPhoneStock {
         }
         catch(NullPointerException exception)
         {
-            System.err.printf("Null Pointer Exception occurred in function: buyIphone\nMessage: %s\n", exception.getMessage());
-            exception.printStackTrace(System.err);
-            System.err.print("Returning NULL\n");
+            // This is an exception that means that the function took wrong parameters.
+            // A very lazy way to "error check" the parameters.
+
+            //  System.err.printf("Null Pointer Exception occurred in function: buyIphone\nMessage: %s\n", exception.getMessage());
+            //  exception.printStackTrace(System.err);
+            //  System.err.print("Returning NULL\n");
 
             return null;
         }
@@ -115,13 +123,25 @@ public class IPhoneStock {
 
         return outputIPhone;
     }
-    public void printStockData()
+
+    public void emplaceIPhoneBack(IPhone phone)
     {
-        System.out.println("Available Stock of IPhones:");
-
-        System.out.println("IPhone SE:");
-
-        for (var storageEntry : iphoneSEStock.entrySet())
+        switch (phone.getType())
+        {
+            case IPHONE_SE -> {
+                iphoneSEStock.get(phone.getModelCapacity()).get(phone.getModelColor()).push(phone);
+            }
+            case IPHONE_13 -> {
+                iphone13Stock.get(phone.getModelCapacity()).get(phone.getModelColor()).push(phone);
+            }
+            case IPHONE_12 -> {
+                iphone12Stock.get(phone.getModelCapacity()).get(phone.getModelColor()).push(phone);
+            }
+        }
+    }
+    private void printStockData(HashMap<Storage, HashMap<Color, Stack<IPhone>>> stock)
+    {
+        for (var storageEntry : stock.entrySet())
         {
             System.out.printf("\tStorage: %10s\n", storageEntry.getKey());
             for (var colorEntry : storageEntry.getValue().entrySet())
@@ -136,66 +156,69 @@ public class IPhoneStock {
                     System.out.print(" (Out of Stock)");
                 }
 
-                for (var phone : colorEntry.getValue())
-                {
-                    System.out.printf(" %d, ", phone.getId());
-                }
-
                 System.out.print("\n");
             }
         }
-        System.out.print("\n");
-
-        System.out.println("IPhone 12:");
-
-        for (var storageEntry : iphone12Stock.entrySet())
+    }
+    public void printStockData(IPhoneType type)
+    {
+        System.out.printf("Available Stock of %s:\n", type);
+        switch (type)
         {
-            System.out.printf("\tStorage: %10s\n", storageEntry.getKey());
-            for (var colorEntry : storageEntry.getValue().entrySet())
-            {
-                System.out.printf("\t\t-%10s (%d)", colorEntry.getKey(), colorEntry.getValue().size());
-                if (colorEntry.getValue().size() > 0)
-                {
-                    int price = colorEntry.getValue().get(0).getPrice();
-                    System.out.printf(" (%d$)", price);
-                }
-                else {
-                    System.out.print(" (Out of Stock)");
-                }
-
-                for (var phone : colorEntry.getValue())
-                {
-                    System.out.printf(" %d, ", phone.getId());
-                }
-
-                System.out.print("\n");
+            case IPHONE_SE -> {
+                printStockData(iphoneSEStock);
+            }
+            case IPHONE_12 -> {
+                printStockData(iphone12Stock);
+            }
+            case IPHONE_13 -> {
+                printStockData(iphone13Stock);
             }
         }
-        System.out.print("\n");
+        System.out.println();
+    }
 
-        System.out.println("IPhone 13:");
-
-        for (var storageEntry : iphone13Stock.entrySet())
-        {
-            System.out.printf("\tStorage: %10s\n", storageEntry.getKey());
-            for (var colorEntry : storageEntry.getValue().entrySet())
-            {
-                System.out.printf("\t\t-%10s (%d)", colorEntry.getKey(), colorEntry.getValue().size());
-                if (colorEntry.getValue().size() > 0)
+    public ArrayList<Color> getIPhoneColors(IPhoneType type) {
+        ArrayList<Color> colors = new ArrayList<>();
+        switch(type){
+            case IPHONE_12 -> {
+                for (var v : iphone12Stock.values())
                 {
-                    int price = colorEntry.getValue().get(0).getPrice();
-                    System.out.printf(" (%d$)", price);
+                    colors.addAll(v.keySet());
+                    break;
                 }
-                else {
-                    System.out.print(" (Out of Stock)");
-                }
-
-                for (var phone : colorEntry.getValue())
+            }
+            case IPHONE_13 -> {
+                for (var v : iphone13Stock.values())
                 {
-                    System.out.printf(" %d, ", phone.getId());
+                    colors.addAll(v.keySet());
+                    break;
                 }
-                System.out.print("\n");
+            }
+            case IPHONE_SE -> {
+                for (var v : iphoneSEStock.values())
+                {
+                    colors.addAll(v.keySet());
+                    break;
+                }
             }
         }
+        return colors;
+    }
+
+    public ArrayList<Storage> getIphoneStorages(IPhoneType type) {
+        ArrayList<Storage> storages = new ArrayList<>();
+        switch(type){
+            case IPHONE_12 -> {
+                storages.addAll(iphone12Stock.keySet());
+            }
+            case IPHONE_13 -> {
+                storages.addAll(iphone13Stock.keySet());
+            }
+            case IPHONE_SE -> {
+                storages.addAll(iphoneSEStock.keySet());
+            }
+        }
+        return storages;
     }
 }

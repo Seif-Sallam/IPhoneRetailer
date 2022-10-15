@@ -1,14 +1,17 @@
 public enum Storage {
-    GB_64,
-    GB_128,
-    GB_256;
+    GB_64("64 GB"),
+    GB_128 ("128 GB"),
+    GB_256 ("256 GB");
 
-    static String toString(Storage s)
+    private String name;
+
+    Storage(String name)
     {
-        if (s == GB_64)
-            return "64 GB";
-        else if (s == GB_128)
-            return "128 GB";
-        return "256 GB";
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }
