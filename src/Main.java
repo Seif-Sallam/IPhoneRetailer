@@ -1,5 +1,7 @@
 import javax.annotation.processing.SupportedSourceVersion;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -17,11 +19,10 @@ public class Main {
 
     // For the cart
     static private int totalMoney;
-    static private IPhone chosenIPhone;
-    static private ArrayList<AccessoryType> chosenAccessory;
-    static private ArrayList<Color> caseColors;
-
-    static private IPhoneType chosenIPhoneType;
+    static  IPhoneType chosenIPhoneType;
+    static private HashMap<IPhoneType, HashMap<AccessoryType, Integer>> cartOfAccessories;
+    static ArrayList<IPhone> cartOfIPhones;
+    static private HashMap<IPhoneType, HashMap<Color, Integer>> cartOfCases;
     private static void addIPhoneSEs()
     {
         IPhoneStock.Instance().addToStock(IPhoneType.IPHONE_SE, Storage.GB_64, Color.White, 300, 2);
@@ -57,47 +58,10 @@ public class Main {
         addIPhone13s();
     }
 
-    private static void addAirpods() {
-        AccessoryStock.Instance().addToStock(IPhoneType.IPHONE_13, AccessoryType.Airpods, 5);
-        AccessoryStock.Instance().setPrice(IPhoneType.IPHONE_13, AccessoryType.Airpods, 150);
-    }
-
-    private static void addCases() {
-        // IPhone SE
-        AccessoryStock.Instance().addToStock(IPhoneType.IPHONE_SE, Color.Red, 2);
-        AccessoryStock.Instance().addToStock(IPhoneType.IPHONE_SE, Color.Black, 1);
-
-        AccessoryStock.Instance().setPrice(IPhoneType.IPHONE_SE, AccessoryType.Case, 30);
-        // IPhone 12
-        AccessoryStock.Instance().addToStock(IPhoneType.IPHONE_12, Color.Black, 3);
-        AccessoryStock.Instance().addToStock(IPhoneType.IPHONE_12, Color.White, 4);
-
-        AccessoryStock.Instance().setPrice(IPhoneType.IPHONE_12, AccessoryType.Case, 40);
-        // IPhone 13
-        AccessoryStock.Instance().addToStock(IPhoneType.IPHONE_13, Color.Yellow, 1);
-        AccessoryStock.Instance().addToStock(IPhoneType.IPHONE_13, Color.Green, 1);
-
-        AccessoryStock.Instance().setPrice(IPhoneType.IPHONE_13, AccessoryType.Case, 50);
-    }
-
-    private static void addMagSafeChargers() {
-        AccessoryStock.Instance().addToStock(IPhoneType.IPHONE_12, AccessoryType.MagSafeCharger, 3);
-        AccessoryStock.Instance().setPrice(IPhoneType.IPHONE_12, AccessoryType.MagSafeCharger, 100);
-
-        AccessoryStock.Instance().addToStock(IPhoneType.IPHONE_13, AccessoryType.MagSafeCharger, 2);
-        AccessoryStock.Instance().setPrice(IPhoneType.IPHONE_13, AccessoryType.MagSafeCharger, 100);
-    }
-
-    private static void initAccessoriesStock()
-    {
-        addMagSafeChargers();
-        addCases();
-        addAirpods();
-    }
-
     private static void mainMenu(Scanner inputScanner){
         do{
             try{
+                System.out.printf("%60s\n","IMax IPhone Retailing System");
                 System.out.println("What do you want to do?");
                 System.out.println("1- View All IPhone Stock");
                 System.out.println("2- View All Accessories Stock");
@@ -175,19 +139,16 @@ public class Main {
         do {
             try {
                 System.out.print("Choose IPhone Model:\n");
-                String[] choices = {"IPhoneSE", "IPhone12", "IPhone13"};
 
-                for (var choice : choices)
-                    System.out.println(choice);
+                for (var choice : IPhoneType.values())
+                    System.out.printf("- %-20s\n", choice.toString());
 
                 String input = inputScanner.nextLine();
-                if (input.equalsIgnoreCase("IPhoneSE"))
-                    chosenType = IPhoneType.IPHONE_SE;
-                else if (input.equalsIgnoreCase("IPhone12"))
-                    chosenType = IPhoneType.IPHONE_12;
-                else if (input.equalsIgnoreCase(("IPhone13")))
-                    chosenType = IPhoneType.IPHONE_13;
-                else
+                for (var name : IPhoneType.values())
+                    if (input.equalsIgnoreCase(name.toString()))
+                        chosenType = name;
+
+                if (chosenType == null)
                     System.out.println("Invalid Input Reenter\n");
             } catch (InputMismatchException e) {
                 System.out.println("Invalid Input Reenter\n");
@@ -203,20 +164,31 @@ public class Main {
 
     private static void clearCart()
     {
-        chosenAccessory.clear();
-        caseColors.clear();
-        chosenIPhoneType = null;
-        chosenIPhone = null;
+        for(var phoneType : IPhoneType.values())
+        {
+            cartOfAccessories.get(phoneType).clear();
+            cartOfCases.get(phoneType).clear();
+        }
+        cartOfIPhones.clear();
     }
     private static void putBackCart()
     {
-        for (var acc : chosenAccessory)
-            AccessoryStock.Instance().addToStock(chosenIPhoneType, acc);
-        for (var caseClr : caseColors)
-            AccessoryStock.Instance().addToStock(chosenIPhoneType, caseClr);
+        for (IPhoneType phoneType : IPhoneType.values())
+        {
+            for(var acc : cartOfAccessories.get(phoneType).entrySet())
+            {
+                for (int i = 0; i < acc.getValue(); i++)
+                    AccessoryStock.Instance().addToStock(phoneType, acc.getKey());
+            }
+            for(var caseClr : cartOfCases.get(phoneType).entrySet())
+            {
+                for (int i = 0; i < caseClr.getValue(); i++)
+                    AccessoryStock.Instance().addToStock(phoneType, caseClr.getKey());
+            }
+        }
 
-        if (chosenIPhone != null)
-            IPhoneStock.Instance().emplaceIPhoneBack(chosenIPhone);
+        for (IPhone phone : cartOfIPhones)
+            IPhoneStock.Instance().emplaceIPhoneBack(phone);
 
         clearCart();
     }
@@ -282,7 +254,7 @@ public class Main {
         AccessoryType chosenAccessoryType = null;
         do{
             try{
-                System.out.print("Available Storage\n");
+                System.out.print("Accessories\n");
 
                 for (var acc : AccessoryType.values())
                     System.out.printf("- %s\n", acc);
@@ -312,21 +284,19 @@ public class Main {
 
     private static void buyAccessory(Scanner inputScanner)
     {
-        if (chosenIPhoneType == null) {
+        if(chosenIPhoneType == null)
             chosenIPhoneType = chooseIPhone(inputScanner);
-        }
-        else {
-            System.out.printf("Choosing for %s\n", chosenIPhoneType);
-        }
+
         AccessoryStock.Instance().printStock(chosenIPhoneType);
         AccessoryType accessoryType = chooseAccessory(inputScanner);
 
         if (accessoryType == AccessoryType.Case) {
-            int price = AccessoryStock.Instance().getPrice(chosenIPhoneType, accessoryType);
             ArrayList<Color> colors = AccessoryStock.Instance().getCaseColors(chosenIPhoneType);
             Color color = chooseColor(inputScanner, colors);
-            if (AccessoryStock.Instance().buyCase(chosenIPhoneType, color)) {
-                caseColors.add(color);
+            int price = AccessoryStock.Instance().buyCase(chosenIPhoneType, color);
+            if (price > 0) {
+                int count = cartOfCases.get(chosenIPhoneType).get(color);
+                cartOfCases.get(chosenIPhoneType).put(color, count + 1);
                 System.out.printf("%s case was added to the cart. Costs: %d$\n", color, price);
                 totalMoney += price;
                 System.out.printf("Total money %d$\n", totalMoney);
@@ -336,11 +306,12 @@ public class Main {
             }
         }
         else {
-            if (AccessoryStock.Instance().buyAccessory(chosenIPhoneType, accessoryType))
+            int price = AccessoryStock.Instance().buyAccessory(chosenIPhoneType, accessoryType);
+            if (price > 0)
             {
-                int price = AccessoryStock.Instance().getPrice(chosenIPhoneType, accessoryType);
                 System.out.printf("%s was added to the cart. Costs: %d$\n", accessoryType, price);
-                chosenAccessory.add(accessoryType);
+                int count = cartOfAccessories.get(chosenIPhoneType).get(accessoryType);
+                cartOfAccessories.get(chosenIPhoneType).put(accessoryType, count + 1);
                 totalMoney += price;
                 System.out.printf("Total money %d$\n", totalMoney);
             }
@@ -348,17 +319,12 @@ public class Main {
                 System.out.print("Out of Stock");
             }
         }
+        chosenIPhoneType = null;
         appState = AppState.MainMenu;
     }
 
     private static void buyIPhone(Scanner inputScanner)
     {
-        if (chosenIPhone != null)
-        {
-            System.out.print("Added an IPhone to the cart already. Remove it to buy a new iphone\n");
-            appState = AppState.MainMenu;
-            return;
-        }
         IPhoneType type = chooseIPhone(inputScanner);
 
         IPhoneStock.Instance().printStockData(type);
@@ -367,7 +333,7 @@ public class Main {
         Storage storage = choseStorage(inputScanner, iphoneStorageOptions);
         ArrayList<Color> iphoneColors = IPhoneStock.Instance().getIPhoneColors(type);
         Color color = chooseColor(inputScanner, iphoneColors);
-        chosenIPhone = IPhoneStock.Instance().buyIPhone(type, storage, color);
+        IPhone chosenIPhone = IPhoneStock.Instance().buyIPhone(type, storage, color);
         if (chosenIPhone == null){
             System.out.print("Chosen IPhone is out of stock\n");
         }
@@ -376,30 +342,63 @@ public class Main {
             totalMoney += chosenIPhone.getPrice();
             System.out.printf("Total money in cart: %d$\n", totalMoney);
         }
-        appState = AppState.MainMenu;
+        cartOfIPhones.add(chosenIPhone);
+
+        System.out.print("Do you want to buy accessories for this IPhone?\n");
+        System.out.print("- Yes\n");
+        System.out.print("- No\n");
+        String answer = null;
+
+        try{
+            do{
+                String input = inputScanner.nextLine();
+                if (input.equalsIgnoreCase("yes"))
+                    answer = "yes";
+                else if (input.equalsIgnoreCase("no"))
+                    answer = "no";
+                else
+                    System.out.print("Invalid Input, reenter");
+            }while(answer == null);
+        }
+        catch (Exception e)
+        {
+            unHandledExceptionFunc(e);
+            answer = "no";
+        }
+        if (answer.equalsIgnoreCase("no"))
+            appState = AppState.MainMenu;
+        else {
+            chosenIPhoneType = chosenIPhone.getType();
+            appState = AppState.BuyAccessory;
+        }
     }
 
     private static void viewCart(Scanner inputScanner)
     {
-        String modelName = (chosenIPhone == null) ? "NONE" : chosenIPhone.getModelName();
-        System.out.printf("Chosen IPhone: %-20s\n", modelName);
+        System.out.printf("%d IPhones in cart\n", cartOfIPhones.size());
+        for (var phone : cartOfIPhones) {
+            System.out.printf("- %-20s (%d$)\n", phone.toString(), phone.getPrice());
+            System.out.printf("\tID: %d\n", phone.getId());
+        }
 
-        if (chosenIPhone != null)
-            System.out.printf("Phone ID: %d\n", chosenIPhone.getId());
-
-        if (caseColors.size() > 0 || chosenAccessory.size() > 0)
-            System.out.printf("Chosen Accessories for %s:\n", chosenIPhoneType);
-
-        for (var acc : chosenAccessory)
-            System.out.printf("\t- %s\n", acc);
-
-        if (caseColors.size() > 0)
-            System.out.print("Cases of Colors:\n");
-        for (var clr : caseColors)
-            System.out.printf("\t- %s\n", clr);
+        for (IPhoneType phoneType : IPhoneType.values())
+        {
+            System.out.printf("Chosen Accessories for %s\n\n", phoneType);
+            for (var acc : cartOfAccessories.get(phoneType).entrySet())
+            {
+                if (acc.getValue() > 0)
+                    System.out.printf("- %-20s (%d)\n", acc.getKey().toString(), acc.getValue());
+            }
+            for (var chosenCase : cartOfCases.get(phoneType).entrySet())
+            {
+                if(chosenCase.getValue() > 0)
+                    System.out.printf("- %-20s (%d)\n", chosenCase.getKey().toString(), chosenCase.getValue());
+            }
+        }
 
         String choice = null;
         do {
+            System.out.print("-------------------------\n");
             System.out.println("- Put back");
             System.out.println("- Buy");
             System.out.println("- Back");
@@ -413,7 +412,7 @@ public class Main {
             else if (input.equalsIgnoreCase("Back"))
                 choice = "Back";
             else
-                System.out.print("Renter\n");
+                System.out.print("Invalid Input renter\n");
         }while(choice == null);
 
         switch (choice)
@@ -444,17 +443,24 @@ public class Main {
 
     public static void main(String[] args)
     {
+        cartOfAccessories = new HashMap<>();
+        cartOfCases = new HashMap<>();
+        cartOfIPhones = new ArrayList<>();
+        for (var type : IPhoneType.values())
+        {
+            cartOfCases.put(type, new HashMap<>());
+            for (var clr : Color.values())
+                cartOfCases.get(type).put(clr, 0);
+            cartOfAccessories.put(type, new HashMap<>());
+            for (var acc : AccessoryType.values())
+                cartOfAccessories.get(type).put(acc, 0);
+        }
+
         appState = AppState.MainMenu;
+
         Scanner inputScanner = new Scanner(System.in);
-        chosenIPhone = null;
-        chosenIPhoneType = null;
-        chosenAccessory = new ArrayList<>();
-        caseColors = new ArrayList<>();
 
         initIPhoneStock();
-        initAccessoriesStock();
-
-        System.out.printf("%60s\n","IMax IPhone Retailing System");
 
         do {
             switch (appState) {

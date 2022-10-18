@@ -1,4 +1,4 @@
-abstract public class IPhone
+abstract public class IPhone implements AccessoryInterface
 {
     protected String modelName;
     protected Storage modelCapacity;

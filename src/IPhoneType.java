@@ -1,9 +1,9 @@
 public enum IPhoneType {
-    IPHONE_13("IPhone 13"),
-    IPHONE_12("IPhone 12"),
-    IPHONE_SE("IPhone SE");
+    IPHONE_13("IPhone13"),
+    IPHONE_12("IPhone12"),
+    IPHONE_SE("IPhoneSE");
 
-    private String modelName;
+    private final String modelName;
 
     IPhoneType(String str)
     {
