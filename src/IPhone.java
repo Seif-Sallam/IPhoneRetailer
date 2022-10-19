@@ -1,3 +1,5 @@
+// An abstract class that represents a single IPhone and implements the accessory interface, so that all its children will\
+// need to implement it later.
 abstract public class IPhone implements AccessoryInterface
 {
     protected String modelName;

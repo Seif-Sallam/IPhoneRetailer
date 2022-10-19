@@ -1,7 +1,8 @@
+// Simple enum that resembles the IPhone Types.
 public enum IPhoneType {
-    IPHONE_13("IPhone13"),
-    IPHONE_12("IPhone12"),
-    IPHONE_SE("IPhoneSE");
+    IPHONE_13("IPhone 13"),
+    IPHONE_12("IPhone 12"),
+    IPHONE_SE("IPhone SE");
 
     private final String modelName;
 

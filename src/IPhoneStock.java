@@ -1,12 +1,13 @@
-import java.awt.*;
-import java.lang.reflect.Array;
 import java.util.*;
 
+// The stock of IPhones acts as an inventory manager.
 public class IPhoneStock {
+    // All the stock of each iphone variation
     private static HashMap<Storage, HashMap<Color, Stack<IPhone>>> iphone12Stock;
     private static HashMap<Storage, HashMap<Color, Stack<IPhone>>> iphone13Stock;
     private static HashMap<Storage, HashMap<Color, Stack<IPhone>>> iphoneSEStock;
 
+    // It is a singleton because we will only have one inventory per system.
     private static IPhoneStock instance;
 
     public static IPhoneStock Instance() {
@@ -15,6 +16,7 @@ public class IPhoneStock {
         return instance;
     }
 
+    // Initializes the stock, it is private because we do not want it to be created.
     private IPhoneStock()
     {
         iphone12Stock = new HashMap<>();
@@ -59,6 +61,7 @@ public class IPhoneStock {
         }
     }
 
+    // Adds to the stock the correct IPhone.
     public void addToStock(IPhoneType type, Storage storage, Color color, int price)
     {
         switch(type)
@@ -69,12 +72,14 @@ public class IPhoneStock {
         }
     }
 
+    // Adds to the stock an IPhone more than once
     public void addToStock(IPhoneType type, Storage storage, Color color, int price, int count)
     {
         for (int i = 0; i < count; i++)
             addToStock(type, storage, color, price);
     }
 
+    // Buys an IPhone if exists in the stock.
     public IPhone buyIPhone(IPhoneType type, Storage storage, Color color)
     {
         IPhone outputIPhone = null;
@@ -124,6 +129,7 @@ public class IPhoneStock {
         return outputIPhone;
     }
 
+    // Returning the IPhone to its own stock (preserving the ID it was given from the beginning).
     public void emplaceIPhoneBack(IPhone phone)
     {
         switch (phone.getType())
@@ -139,6 +145,8 @@ public class IPhoneStock {
             }
         }
     }
+
+    // Helper function that prints the entire stock data of a specific IPhone
     private void printStockData(HashMap<Storage, HashMap<Color, Stack<IPhone>>> stock)
     {
         for (var storageEntry : stock.entrySet())
@@ -160,6 +168,8 @@ public class IPhoneStock {
             }
         }
     }
+
+    // General function that takes the iphone type and prints its stock
     public void printStockData(IPhoneType type)
     {
         System.out.printf("Available Stock of %s:\n", type);
@@ -178,10 +188,13 @@ public class IPhoneStock {
         System.out.println();
     }
 
+    // Getting the iphone colors available. unlike the accessories, the iphone stock is the one
+    // that knows about the iphone colors not the actual iphone. Since the iphone is indifferent about it.
     public ArrayList<Color> getIPhoneColors(IPhoneType type) {
         ArrayList<Color> colors = new ArrayList<>();
         switch(type){
             case IPHONE_12 -> {
+                // We only need one example from the stock, that is why we break.
                 for (var v : iphone12Stock.values())
                 {
                     colors.addAll(v.keySet());
@@ -206,6 +219,7 @@ public class IPhoneStock {
         return colors;
     }
 
+    // Gets the storages of the iphone.
     public ArrayList<Storage> getIphoneStorages(IPhoneType type) {
         ArrayList<Storage> storages = new ArrayList<>();
         switch(type){

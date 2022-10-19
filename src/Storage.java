@@ -1,3 +1,4 @@
+// Simple Enum that resembles the storage.
 public enum Storage {
     GB_64("64 GB"),
     GB_128 ("128 GB"),

@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+// There was hope that I would have time to do anything with GUI.
 public class Window {
     JFrame mainFrame;
     Button buyButton;

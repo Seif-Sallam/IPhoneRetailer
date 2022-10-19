@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 
+// Same procedure as IPhone12
 public class IPhone13 extends IPhone {
     static HashMap<Color, Integer> casesStock;
     static int chargerStock;

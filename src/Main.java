@@ -1,12 +1,12 @@
-import javax.annotation.processing.SupportedSourceVersion;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
+// Main class that drives the entire app together
 public class Main {
 
+    // App state, it is defined here because it will only be used here.
     private enum AppState{
         Exit,
         MainMenu,
@@ -23,6 +23,56 @@ public class Main {
     static private HashMap<IPhoneType, HashMap<AccessoryType, Integer>> cartOfAccessories;
     static ArrayList<IPhone> cartOfIPhones;
     static private HashMap<IPhoneType, HashMap<Color, Integer>> cartOfCases;
+
+    // The entry point, made small and concise and only does method calls.
+    public static void main(String[] args)
+    {
+        // Data initialization for the app state
+        cartOfAccessories = new HashMap<>();
+        cartOfCases = new HashMap<>();
+        cartOfIPhones = new ArrayList<>();
+        for (var type : IPhoneType.values())
+        {
+            cartOfCases.put(type, new HashMap<>());
+            for (var clr : Color.values())
+                cartOfCases.get(type).put(clr, 0);
+            cartOfAccessories.put(type, new HashMap<>());
+            for (var acc : AccessoryType.values())
+                cartOfAccessories.get(type).put(acc, 0);
+        }
+
+        // The app state starts at the main menu
+        appState = AppState.MainMenu;
+
+        // The input scanner we used throughout the program
+        Scanner inputScanner = new Scanner(System.in);
+
+        // We initialize the phones stock
+        initIPhoneStock();
+
+        do {
+            // The finite state machine of the program.
+            switch (appState) {
+                case MainMenu -> {
+                    mainMenu(inputScanner);
+                }
+                case BuyIPhone -> {
+                    buyIPhone(inputScanner);
+                }
+                case BuyAccessory -> {
+                    buyAccessory(inputScanner);
+                }
+                case ViewCart -> {
+                    viewCart(inputScanner);
+                }
+            }
+        }
+        while(appState != AppState.Exit);
+
+        System.out.print("Thank you for choosing this app!\n");
+    }
+
+    // Helper functions that adds specific phones written according to the specified prices colors and quantity.
     private static void addIPhoneSEs()
     {
         IPhoneStock.Instance().addToStock(IPhoneType.IPHONE_SE, Storage.GB_64, Color.White, 300, 2);
@@ -51,6 +101,7 @@ public class Main {
         IPhoneStock.Instance().addToStock(IPhoneType.IPHONE_13, Storage.GB_256, Color.Red, 500, 2);
     }
 
+    // Initializing the iphone stock.
     private static void initIPhoneStock()
     {
         addIPhoneSEs();
@@ -58,6 +109,7 @@ public class Main {
         addIPhone13s();
     }
 
+    // The Main Menu state.
     private static void mainMenu(Scanner inputScanner){
         do{
             try{
@@ -129,17 +181,21 @@ public class Main {
             }
             catch( Exception e)
             {
+                // Most likely we won't have an exception, but if we did, we kinda do handle it thru not handling it
+                // and continuing the app.
                 unHandledExceptionFunc(e);
             }
         }while(appState == AppState.MainMenu);
     }
 
+    // Choosing the iphone
     private static IPhoneType chooseIPhone(Scanner inputScanner) {
         IPhoneType chosenType = null;
         do {
             try {
                 System.out.print("Choose IPhone Model:\n");
 
+                // Prints all the IPhones
                 for (var choice : IPhoneType.values())
                     System.out.printf("- %-20s\n", choice.toString());
 
@@ -162,6 +218,7 @@ public class Main {
         return chosenType;
     }
 
+    // Clears the cart
     private static void clearCart()
     {
         for(var phoneType : IPhoneType.values())
@@ -171,6 +228,7 @@ public class Main {
         }
         cartOfIPhones.clear();
     }
+    // Puts back the content to the stock
     private static void putBackCart()
     {
         for (IPhoneType phoneType : IPhoneType.values())
@@ -193,6 +251,7 @@ public class Main {
         clearCart();
     }
 
+    // Function similar to choosing IPhone, just chooses the storage
     private static Storage choseStorage(Scanner inputScanner, ArrayList<Storage> storages)  {
         Storage chosenStorage = null;
         do{
@@ -222,6 +281,7 @@ public class Main {
         return chosenStorage;
     }
 
+    // Function similar to choosing IPhone and choosing storage, just chooses the color
     private static Color chooseColor(Scanner inputScanner, ArrayList<Color> iphoneColors) {
         Color chosenColor = null;
         do{
@@ -250,6 +310,8 @@ public class Main {
         }while(chosenColor == null);
         return chosenColor;
     }
+
+    // Choosing an accessory
     private static AccessoryType chooseAccessory(Scanner inputScanner) {
         AccessoryType chosenAccessoryType = null;
         do{
@@ -282,6 +344,7 @@ public class Main {
         return chosenAccessoryType;
     }
 
+    // Buying an accessory and if it is a case, choose a color
     private static void buyAccessory(Scanner inputScanner)
     {
         if(chosenIPhoneType == null)
@@ -323,6 +386,8 @@ public class Main {
         appState = AppState.MainMenu;
     }
 
+    // Buying an iphone is done by choosing an iphone, then a storage, then a color
+    // Then choosing an accessory if they want.
     private static void buyIPhone(Scanner inputScanner)
     {
         IPhoneType type = chooseIPhone(inputScanner);
@@ -336,6 +401,8 @@ public class Main {
         IPhone chosenIPhone = IPhoneStock.Instance().buyIPhone(type, storage, color);
         if (chosenIPhone == null){
             System.out.print("Chosen IPhone is out of stock\n");
+            appState = AppState.MainMenu;
+            return;
         }
         else {
             System.out.printf("Bought %s Successfully & added to the cart. It costs: %d$\n", chosenIPhone.getModelName(), chosenIPhone.getPrice());
@@ -373,6 +440,7 @@ public class Main {
         }
     }
 
+    // Viewing the cart is the only place where you can check out.
     private static void viewCart(Scanner inputScanner)
     {
         System.out.printf("%d IPhones in cart\n", cartOfIPhones.size());
@@ -400,13 +468,13 @@ public class Main {
         do {
             System.out.print("-------------------------\n");
             System.out.println("- Put back");
-            System.out.println("- Buy");
+            System.out.println("- Checkout");
             System.out.println("- Back");
 
             System.out.print("\nAnswer: ");
             String input = inputScanner.nextLine();
-            if (input.equalsIgnoreCase("Buy"))
-                choice = "Buy";
+            if (input.equalsIgnoreCase("Checkout"))
+                choice = "Checkout";
             else if (input.equalsIgnoreCase("Put Back"))
                 choice = "Put back";
             else if (input.equalsIgnoreCase("Back"))
@@ -422,7 +490,7 @@ public class Main {
                 System.out.print("put back Successfully\n");
                 appState = AppState.MainMenu;
             }
-            case "Buy" -> {
+            case "Checkout" -> {
                 clearCart();
                 System.out.printf("Paid %d\n", totalMoney);
                 totalMoney = 0;
@@ -434,6 +502,7 @@ public class Main {
         }
     }
 
+    // Generic method used to handle any exception and show the stack trace.
     private static void unHandledExceptionFunc(Exception e)
     {
         System.err.printf("Unhandled Exception Occurred: %s\n", e.getMessage());
@@ -441,44 +510,4 @@ public class Main {
         System.err.print("Continuing Execution\n");
     }
 
-    public static void main(String[] args)
-    {
-        cartOfAccessories = new HashMap<>();
-        cartOfCases = new HashMap<>();
-        cartOfIPhones = new ArrayList<>();
-        for (var type : IPhoneType.values())
-        {
-            cartOfCases.put(type, new HashMap<>());
-            for (var clr : Color.values())
-                cartOfCases.get(type).put(clr, 0);
-            cartOfAccessories.put(type, new HashMap<>());
-            for (var acc : AccessoryType.values())
-                cartOfAccessories.get(type).put(acc, 0);
-        }
-
-        appState = AppState.MainMenu;
-
-        Scanner inputScanner = new Scanner(System.in);
-
-        initIPhoneStock();
-
-        do {
-            switch (appState) {
-                case MainMenu -> {
-                    mainMenu(inputScanner);
-                }
-                case BuyIPhone -> {
-                    buyIPhone(inputScanner);
-                }
-                case BuyAccessory -> {
-                    buyAccessory(inputScanner);
-                }
-                case ViewCart -> {
-                    viewCart(inputScanner);
-                }
-            }
-        }
-        while(appState != AppState.Exit);
-        System.out.print("Thank you for choosing this app!\n");
-    }
 }

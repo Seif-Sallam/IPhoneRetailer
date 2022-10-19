@@ -1,30 +1,8 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 
+// The accessory stock is just a helper class to be able to easily interact with the accessories according to what IPhone we are ordering.
 public class AccessoryStock {
-
-    // The Accessory doesn't even need to be a class for how little of data it holds,
-    // We can simply represent them with three attributes (Its type, Color in CASES, and Price),
-    // If we were to use classes and inheritance, the classes would pretty much have one or two (max) as attributes.
-    // The type would be by the class type, so we do not need to save it.
-    // The Color will only be in the case of an accessory type of cases (not in the others).
-    // the price should NOT exist with the accessory, because we have variations in the prices, and
-    // they depend on another class (IPhone), so the middle man would be the stock :D.
-
-    // If we were to embed the accessory inside the IPhone, we would have made them static functions to the IPhones
-    // Defying the reason behind their existence as a physical object in the stock.
-    // If we were to use them as an interface to the IPhones, it doesn't do any difference to the implementation, because
-    // I would still need the existence of an object of the IPhone (which I do not have if I am only buying an accessory).
-
-    // The chosen design is that we save the data of all the accessories inside the stock spread out in them.
-    // We would have gone to the _classes_ option if the accessories had IDs, but they do not (but they should have ones).
-    // If something has a stock, it should have a unique identifier.
-
-    // The concept of a stock is naively simple. A singleton container that exists only once and keeps track of the data in and out
-    // of the stock.
-
-    // It has to be a singleton because at any point in time, I would only need to have one stock of IPhones/Accessories.
-
     private static AccessoryStock instance;
 
     public static AccessoryStock Instance()
@@ -33,8 +11,10 @@ public class AccessoryStock {
             instance = new AccessoryStock();
         return instance;
     }
+    // These prototypes are like the portal where we know which phones have what accessories and of what quantity.
     HashMap<IPhoneType, IPhone> phonesPrototypes;
 
+    // Constructor that initializes the prototypes to some dummy variables.
     private AccessoryStock()
     {
         phonesPrototypes = new HashMap<>();
@@ -43,8 +23,10 @@ public class AccessoryStock {
         phonesPrototypes.put(IPhoneType.IPHONE_13, new IPhone13(Storage.GB_64, Color.Red, 1));
     }
 
+    // Buying an Accessory is done by knowing which iphone type it is, and what accessory it is.
     public int buyAccessory(IPhoneType iPhoneType, AccessoryType type)
     {
+        // We would be only dealing with Airpods and chargers here, because Cases need another layer of choice.
         try {
             switch (type)
             {
@@ -67,7 +49,7 @@ public class AccessoryStock {
             return 0;
         }
     }
-
+    // Buying a case is by providing the phone type and the color.
     public int buyCase(IPhoneType iPhoneType, Color color)
     {
         try {
@@ -81,11 +63,13 @@ public class AccessoryStock {
         }
     }
 
+    // Prints the stock of a specific iphone type
     public void printStock(IPhoneType iphoneType)
     {
         phonesPrototypes.get(iphoneType).printAvailableAcc();
     }
 
+    // Adds to the stock of a specific iphone (not for cases)
     public void addToStock(IPhoneType iPhoneType, AccessoryType type) {
         try {
             switch (type)
@@ -108,6 +92,7 @@ public class AccessoryStock {
 
     }
 
+    // Adding a case is passing in the case color.
     public void addToStock(IPhoneType iPhoneType, Color caseColor) {
         try {
             phonesPrototypes.get(iPhoneType).addCase(caseColor);
@@ -119,6 +104,7 @@ public class AccessoryStock {
         }
     }
 
+    // Helper function to know the available colors in a phone model.
     public ArrayList<Color> getCaseColors(IPhoneType type) {
 
         return phonesPrototypes.get(type).getCaseColors();
